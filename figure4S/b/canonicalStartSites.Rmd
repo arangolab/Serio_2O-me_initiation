@@ -1,0 +1,151 @@
+---
+title: "CanonicalStartSites"
+author: "Hannah Serio"
+date: "2025-05-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tibble)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(openxlsx)
+```
+
+## processing all files prior to plotting
+```{r file formatting}
+# HELA
+nmHELA <- read.table("./nmseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmmtHELA <- read.table("./nmmtseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+njuHELA <- read.table("./nju/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHELA <- read.table("./mlm/HeLaCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+# HEK
+nmHEK <- read.table("./nmseq/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+njuHEK <- read.table("./nju/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEK <- read.table("./mlm/HEKCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+# HepG2
+nmmtHEPG2 <- read.table("./nmmtseq/HepG2CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEPG2 <- read.table("./mlm/HepG2CanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+# A549
+njuA549 <- read.table("./nju/A549CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+data_list <- list(
+  nmHELA = nmHELA,
+  nmmtHELA = nmmtHELA,
+  njuHELA = njuHELA,
+  mlmHELA = mlmHELA,
+  nmHEK = nmHEK,
+  njuHEK = njuHEK,
+  mlmHEK = mlmHEK,
+  nmmtHEPG2 = nmmtHEPG2,
+  mlmHEPG2 = mlmHEPG2,
+  njuA549 = njuA549
+)
+
+```
+
+## Dot Plots per Cell Line
+```{r canonicalperCellLine, fig.width=4.5, fig.height=4.5, fig.path='R_plots/', dev=c('png', 'pdf')}
+
+plot_codon_positions_by_study <- function(named_tables) {
+  # Set allowed codon positions, excluding 0
+  codon_levels <- factor(c(-3, -2, -1, 1, 2, 3, 4), levels = c(-3, -2, -1, 1, 2, 3, 4))
+
+  # Rename prefixes to study names
+  legend_rename <- c(
+    nm = "Nm-seq\nDai et. al. 2018",
+    nmmt = "NJU-seq\nChen et. al. 2024",
+    nju = "Nm-mut-seq\nTang et. al. 2023",
+    mlm = "Nanopore\nLi et. al. 2024"
+  )
+
+  # Create frequency tables for each dataset
+  freq_list <- lapply(names(named_tables), function(name) {
+    df <- named_tables[[name]]
+    last_col <- df[[ncol(df)]]
+    counts <- as.data.frame(table(factor(last_col, levels = levels(codon_levels))))
+    colnames(counts) <- c("position", "Freq")
+    counts$Prefix <- str_extract(name, "^[a-z]+")
+    counts$CellLine <- str_extract(name, "HELA|HEK|HEPG2|A549")
+    counts
+  })
+
+  # Combine and format the data
+  combined_data <- bind_rows(freq_list)
+  combined_data$position <- factor(combined_data$position, levels = as.character(c(-3, -2, -1, 1, 2, 3, 4)))
+  combined_data$Prefix <- recode(combined_data$Prefix, !!!legend_rename)
+
+  # Split data by study (Prefix)
+  split_data <- split(combined_data, combined_data$Prefix)
+
+  # Generate one plot per study
+  plot_list <- lapply(names(split_data), function(study) {
+    df <- split_data[[study]]
+    ggplot(df, aes(x = position, y = Freq, color = CellLine, group = CellLine)) +
+      geom_point(size = 3) +
+      scale_x_discrete(
+        drop = FALSE,
+        labels = c(
+        "-3" = "-3",
+        "-2" = "-2",
+        "-1" = "-1",
+        "1" = "+1",
+        "2" = "+2",
+        "3" = "+3",
+        "4" = "+4"
+      )) +
+      scale_y_continuous(limits = c(0, 30), expand = expansion(mult = c(0, 0))) +
+      labs(
+        title = paste(study),
+        x = "Position Relative to Start Codon",
+        y = "# of sites",
+        color = "Cell Line"
+      ) +
+      scale_color_manual(
+        values = c(
+        "HELA" = "#d62728",   # blue
+        "HEK" = "skyblue2",    # orange
+        "HEPG2" = "khaki2",  # green
+        "A549" = "tan1"    # red
+        ),
+        labels = c(
+          "HELA" = "HeLa",
+          "HEK" = "HEK293T",
+          "HEPG2" = "HepG2",
+          "A549" = "A549"
+      )) +
+      theme_minimal(base_size = 14) +
+      theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.ticks.length = unit(5, "pt"),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.title = element_text(size = 16, ),
+        axis.line.y = element_line(color = "black"),
+        axis.line.x = element_line(color = "black"),
+        legend.title = element_text(size = 12, face = "bold"),
+        legend.text = element_text(size = 12)
+      )
+  })
+
+  names(plot_list) <- names(split_data)
+  return(plot_list)
+}
+
+# Usage:
+plots <- plot_codon_positions_by_study(data_list)
+
+# View each plot
+for (p in names(plots)) {
+  print(plots[[p]])
+}
+
+```

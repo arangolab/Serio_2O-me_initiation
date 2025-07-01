@@ -1,4 +1,4 @@
-# Figure 4A: Nm site distribution in human mRNAs
+# Extended Data 4A: Nm site distribution in human mRNAs
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -88,4 +88,4 @@ python extractConsequence.py -i HEKNm.hg38noLiftover_annotated.bed -o HEKNm.hg38
 Now that we have added mRNA consequence, the data from this study can be analyzed in parallel with the datasets from the other publications.
 
 ## Analyzing mRNA consequence per study and cell line
-```every2OSITEdotplot.Rmd``` creates dotplots that showing the distribution of Nm sites for each mRNA consequence per study and cell line.
+```every2OSITEdotplot.Rmd``` creates dotplots showing the distribution of Nm sites for each mRNA consequence per study and cell line.
