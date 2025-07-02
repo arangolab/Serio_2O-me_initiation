@@ -1,4 +1,4 @@
-# 2’O-methylation inhibits upstream translation initiation
+# HR-Ribo-seq Processing
 
 ## Samples
 The following datasets were downloaded from GEO (GSE162043, Arango et al, 2022 Mol Cell)
