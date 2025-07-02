@@ -44,7 +44,7 @@ bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig
 
 # Fig. 5A
 
-# Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC
+## Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC
 
 1. xml wget command which outputs results5UTR.fasta
 
@@ -66,7 +66,7 @@ wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml versi
 	</Dataset>
 </Query>'
 ```
-2. Select for the longest transcript per gene
+2. Select the longest transcript per gene
 ```
 python parseFasta.py
 ```
@@ -83,7 +83,7 @@ Outputs: 5utrNearCognates.bed
 ```
 python parseNearCognates.py
 ```
-Inputs: 5utrNearCognates.bed
+Inputs: 5utrNearCognates.bed \
 Outputs: 5utrNearCognatesATG.bed 5utrNearCognatesCTG.bed 5utrNearCognatesGTG.bed 
 
 6. Extract the location of the first nucleotide of the canonical AUG start from GTF file 
@@ -92,5 +92,5 @@ python extractCanonicalCoordinates.py
 ```
 Outputs: canonicalStart.bed (genomic coordinates of the canonical start codon)
 
-# Extract the ribosome density around canonical and upstream codons 
+## Extract the ribosome density around canonical and upstream codons 
 
