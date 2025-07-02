@@ -1,0 +1,63 @@
+---
+title: "TE_canonical"
+author: "Daniel Arango"
+date: "06/05/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r box_plots, message=FALSE, warning = FALSE, fig.width=5, fig.height=5, fig.path='canonical/', dev=c('png', 'pdf')}
+
+library(readr)
+library(readxl)
+library(dplyr)
+library(ggpubr)
+library(ggplot2)
+library(stats)
+library(tidyr)
+
+####-------------------------
+#### Load data
+####-------------------------
+
+TE <- read_csv("TE.AUG.canonical.csv")
+
+#####--------------
+#Box plots of TE
+#####--------------
+
+# Box plot without outliers
+my.plot <- ggboxplot(
+  TE, 
+  x = "Nm_AUG_status", 
+  y = "wt_TE", 
+  fill = "Nm_AUG_status", # Use 'Genotype' for fill
+  palette = c("AUG" = "cyan", "AmUG" = "red"),
+  error.plot.color = "gray" # Set error bars to grey
+) + 
+  theme_minimal() + 
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(size = 1),
+    axis.ticks = element_line(size = 1),
+    legend.position = "none", # Remove legend
+    axis.text = element_text(size = 12), # Adjust axis text size
+    axis.title = element_text(size = 14), # Adjust axis title size
+    plot.title = element_text(size = 16, hjust = 0.5) # Adjust title size and alignment
+  ) +
+  ggtitle("TE analysis") # Add your title here
+
+print(my.plot)
+
+# Perform Wilcoxon test # Perform Wilcoxon test
+test_result <- wilcox.test(wt_TE ~ Nm_AUG_status, 
+                           data = TE, 
+                           exact = FALSE, 
+                           alternative = "less")
+test_result
+
+```
