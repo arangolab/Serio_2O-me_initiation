@@ -44,7 +44,7 @@ BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RP
 bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig --normalizeUsing RPKM --binSize 1
 ```
 
-# Prepping files for ribosome density extraction
+## Prepping files for ribosome density extraction
 
 
 1. Extract the coordinates and genes for Nm[+1] for all ATG, CTG, GTG, ATC codons, and output a list of any genes containing Nm.
