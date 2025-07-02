@@ -1,0 +1,325 @@
+---
+title: "Density Boxplot"
+author: "Hannah Serio"
+date: "6/10/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(ggpubr)
+library(tibble)
+library(ggplot2)
+library(writexl)
+```
+
+
+```{r formatting, cache=TRUE}
+
+## No longer filtering to exclude positions with low ribosome density
+# function to process ribo-seq RPKM around +1 position 
+process_position <- function(atg_profile) {
+  
+  cols_to_keep <- c("chrom", "start", "end", "gene", "strand", "0")
+  
+  # Load data
+  MH85_data <- read_csv(paste0("MH85_", atg_profile, ".csv"), col_select = all_of(cols_to_keep))
+  MH87_data <- read_csv(paste0("MH87_", atg_profile, ".csv"), col_select = all_of(cols_to_keep))
+  
+  
+  # Merge data frames
+  atg <- Reduce(function(x, y) merge(x, y, by = c("chrom", "start", "end", "gene", "strand"), all = FALSE), 
+                list(MH85_data, MH87_data))
+  
+  # Remove duplicates based on "chrom", "start", "end", and "strand"
+  atg <- atg %>% distinct(chrom, start, end, strand, .keep_all = TRUE)
+  
+  atg[["avgRPKM"]] <- rowMeans(atg[, c("0.x", "0.y")], na.rm = TRUE)
+  
+  # remove rows with an average RPKM below 1
+  atg <- atg[!apply(atg["avgRPKM"] <= 1, 1, any), ]
+  
+  return(atg)
+}
+
+####-------------------------
+#### Process Codon Profiles
+####-------------------------
+
+average_canonical <- process_position("canonical")
+average_canonicalNm <- process_position("canonicalNm")
+
+average_upstreamATG <- process_position("ATG")
+average_upstreamATGNm <- process_position("ATGNm")
+
+average_upstreamCTG <- process_position("CTG")
+average_upstreamCTGNm <- process_position("CTGNm")
+
+average_upstreamGTG <- process_position("GTG")
+average_upstreamGTGNm <- process_position("GTGNm")
+
+average_upstreamATC <- process_position("ATC")
+average_upstreamATCNm <- process_position("ATCNm")
+
+# exclude genes from average_canonical that do not contain an upstream ATG/CTG/GTG/ATC
+average_canonicalATG <- average_canonical %>%
+  filter(gene %in% average_upstreamATG$gene)
+
+average_canonicalCTG <- average_canonical %>%
+  filter(gene %in% average_upstreamCTG$gene)
+
+average_canonicalGTG <- average_canonical %>%
+  filter(gene %in% average_upstreamGTG$gene)
+
+average_canonicalATC <- average_canonical %>%
+  filter(gene %in% average_upstreamATC$gene)
+
+####-------------------------
+#### Calculate RPKM ratios
+####-------------------------
+
+# Function to calculate the ratio of RPKM values between upstream and canonical ATGs
+# Handles multiple upstream ATGs for the same gene
+calculate_rpkm_ratios <- function(upstream_data, canonical_data) {
+  
+  # Create an empty data frame to store results
+  ratio_df <- data.frame(gene = character(),
+                         chrom = character(),
+                         start = numeric(),
+                         end = numeric(),
+                         strand = character(),
+                         upstream_rpkm = numeric(),
+                         canonical_rpkm = numeric(),
+                         ratio = numeric(),
+                         stringsAsFactors = FALSE)
+  
+  # Iterate through each row in upstream data
+  for (i in 1:nrow(upstream_data)) {
+    gene_id <- upstream_data$gene[i]
+    upstream_rpkm_raw <- upstream_data$avgRPKM[i]
+    
+    # Convert upstream RPKM to numeric and check for NA
+    upstream_rpkm <- as.numeric(upstream_rpkm_raw)
+    
+    # extract identifying information for this upstream CTG
+    chrom <- upstream_data$chrom[i]
+    start <- upstream_data$start[i]
+    end <- upstream_data$end[i]
+    strand <- upstream_data$strand[i]
+    
+    # Find the corresponding canonical data for this gene
+    canonical_row <- canonical_data[canonical_data$gene == gene_id, ]
+    
+    # If the gene exists in canonical data, calculate the ratio
+    if (nrow(canonical_row) > 0) {
+      canonical_rpkm_raw <- canonical_row$avgRPKM[1]  # There should be only one canonical ATG per gene
+      
+      # Convert canonical RPKM to numeric and check for NA
+      canonical_rpkm <- as.numeric(canonical_rpkm_raw)
+      
+      # Skip this upstream site if canonical RPKM is NA
+      if (is.na(canonical_rpkm)) {
+        next  # Skip to next iteration
+      }
+      
+      ratio <- upstream_rpkm / canonical_rpkm
+      
+      # Add to results data frame
+      ratio_df <- rbind(ratio_df, data.frame(gene = gene_id,
+                                            chrom = chrom,
+                                            start = start,
+                                            end = end,
+                                            strand = strand,
+                                            upstream_rpkm = upstream_rpkm,
+                                            canonical_rpkm = canonical_rpkm,
+                                            ratio = ratio,
+                                            stringsAsFactors = FALSE))
+    }
+  }
+
+  
+  return(ratio_df)
+}
+
+# Calculate ratios for both datasets
+ATG_ratios <- calculate_rpkm_ratios(average_upstreamATG, average_canonicalATG)
+ATGnm_ratios <- calculate_rpkm_ratios(average_upstreamATGNm, average_canonicalNm)
+
+CTG_ratios <- calculate_rpkm_ratios(average_upstreamCTG, average_canonicalCTG)
+CTGnm_ratios <- calculate_rpkm_ratios(average_upstreamCTGNm, average_canonicalNm)
+
+GTG_ratios <- calculate_rpkm_ratios(average_upstreamGTG, average_canonicalGTG)
+GTGnm_ratios <- calculate_rpkm_ratios(average_upstreamGTGNm, average_canonicalNm)
+
+ATC_ratios <- calculate_rpkm_ratios(average_upstreamATC, average_canonicalATC)
+ATCnm_ratios <- calculate_rpkm_ratios(average_upstreamATCNm, average_canonicalNm)
+
+# Add a column to identify the dataset
+ATG_ratios$dataset <- "AUG"
+ATGnm_ratios$dataset <- "AmUG"
+
+CTG_ratios$dataset <- "CUG"
+CTGnm_ratios$dataset <- "CmUG"
+
+GTG_ratios$dataset <- "GUG"
+GTGnm_ratios$dataset <- "GmUG"
+
+ATC_ratios$dataset <- "AUC"
+ATCnm_ratios$dataset <- "AmUC"
+
+standardize_ratios <- function(df) {
+  df %>%
+    mutate(
+      chrom = as.character(chrom),
+      start = as.integer(start),
+      gene = as.character(gene),
+      strand = as.character(strand),
+      ratio = as.numeric(ratio),
+      dataset = as.character(dataset)
+    ) %>%
+    filter(!is.na(ratio)) %>%
+    select(chrom, start, gene, strand, ratio, dataset)
+}
+
+# Apply to all datasets
+all_ratios <- bind_rows(
+  standardize_ratios(ATG_ratios),
+  standardize_ratios(ATGnm_ratios),
+  standardize_ratios(CTG_ratios),
+  standardize_ratios(CTGnm_ratios),
+  standardize_ratios(GTG_ratios),
+  standardize_ratios(GTGnm_ratios),
+  standardize_ratios(ATC_ratios),
+  standardize_ratios(ATCnm_ratios)
+)
+
+# Write to Excel file
+write_xlsx(all_ratios, "RPKMratios.xlsx")
+
+```
+
+```{r density_boxplot, message=FALSE, warning = FALSE, fig.width=9, fig.height=8, fig.path='density/', dev=c('png', 'pdf')}
+
+# Combine the data frames
+all_ratios <- rbind(ATG_ratios, ATGnm_ratios, CTG_ratios, CTGnm_ratios, GTG_ratios, GTGnm_ratios, ATC_ratios, ATCnm_ratios)
+
+all_ratios <- all_ratios %>%
+  mutate(log2_ratio = log2(ratio))
+
+# Define factor levels (controls plot order)
+all_ratios$dataset <- factor(all_ratios$dataset, levels = c("AUG", "AmUG", "CUG", "CmUG", "GUG", "GmUG", "AUC", "AmUC"))
+
+# Define custom color palette
+group_colors <- c(
+  "AUG" = "#1f77b4",   # Normal AUG
+  "AmUG" = "#e41a1c",  # Nm AUG
+  "CUG" = "#1f77b4",
+  "CmUG" = "#e41a1c",
+  "GUG" = "#1f77b4",
+  "GmUG" = "#e41a1c",
+  "AUC" = "#1f77b4",
+  "AmUC" = "#e41a1c"
+)
+
+# n labels
+n_labels <- all_ratios %>%
+  group_by(dataset) %>%
+  summarize(n = n(), .groups = "drop") %>%
+  mutate(label = paste0(dataset, "\n(n=", n, ")"))
+
+label_vector <- setNames(n_labels$label, n_labels$dataset)
+
+# Define pairwise comparisons
+comparisons <- list(
+  c("AUG", "AmUG"),
+  c("CUG", "CmUG"),
+  c("GUG", "GmUG"),
+  c("AUC", "AmUC")
+)
+
+# Wilcoxon test function
+perform_wilcox_test <- function(group1, group2, data) {
+  data1 <- data %>% filter(dataset == group1) %>% pull(log2_ratio)
+  data2 <- data %>% filter(dataset == group2) %>% pull(log2_ratio)
+  
+  test_result <- wilcox.test(data1, data2)
+  
+  return(data.frame(
+    Group1 = group1,
+    Group2 = group2,
+    p_value = test_result$p.value,
+    statistic = test_result$statistic
+  ))
+}
+
+# Apply tests
+pval_df <- do.call(rbind, lapply(comparisons, function(comp) {
+  perform_wilcox_test(comp[1], comp[2], all_ratios)
+}))
+
+# Format p-values
+pval_df$pval_formatted <- ifelse(
+  pval_df$p_value < 0.001,
+  sprintf("%.2e", pval_df$p_value),
+  sprintf("%.3f", pval_df$p_value)
+)
+
+# Base plot
+p <- ggplot(all_ratios, aes(x = dataset, y = log2_ratio, fill = dataset)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = group_colors) +
+  scale_x_discrete(labels = label_vector) +
+  labs(
+    title = "Log2 Ratio of Upstream to Canonical RPKM by Codon Group",
+    x = NULL,
+    y = "log2(Upstream / Canonical RPKM)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black")
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray")
+
+# Add p-value brackets
+max_y <- max(all_ratios$log2_ratio, na.rm = TRUE)
+y_step <- 0.1 * (max_y - min(all_ratios$log2_ratio, na.rm = TRUE))
+
+for (i in seq_len(nrow(pval_df))) {
+  group1 <- as.character(pval_df$Group1[i])
+  group2 <- as.character(pval_df$Group2[i])
+  pval <- pval_df$p_value[i]
+  y_pos <- max_y + i * y_step
+  
+  # Get x positions from factor levels
+  x1 <- which(levels(all_ratios$dataset) == group1)
+  x2 <- which(levels(all_ratios$dataset) == group2)
+  x_mid <- (x1 + x2) / 2
+  
+  p <- p +
+    annotate("segment", x = x1, xend = x2, y = y_pos, yend = y_pos) +
+    annotate("text", x = x_mid, y = y_pos + y_step / 5, label = pval_df$pval_formatted[i], size = 4)
+}
+
+# Display final plot
+print(p)
+
+# Output results
+cat("Direct Wilcoxon Test Results (log2-transformed, unadjusted):\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+for(i in 1:nrow(pval_df)) {
+  cat(sprintf("%s vs %s: p = %s\n", 
+              pval_df$Group1[i], 
+              pval_df$Group2[i], 
+              pval_df$pval_formatted[i]))
+}
+
+```
