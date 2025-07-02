@@ -1,12 +1,14 @@
-# HR-Ribo-seq Processing
+# Fig. 5A
 
-## Samples
+## HR-Ribo-seq Processing
+
+1. Samples
 The following datasets were downloaded from GEO (GSE162043, Arango et al, 2022 Mol Cell)
 
 GSM4932133	HR_RPF_HeLa_WT_rep1 \
 GSM4932134	HR_RPF_HeLa_WT_rep2
 
-## Pre-processing
+2. Pre-processing
 
 Adapters were trimmed using cutadapt/4.2 and the following code:
 
@@ -15,7 +17,7 @@ Adapters were trimmed using cutadapt/4.2 and the following code:
 cutadapt --match-read-wildcards -e 0.1 -O 1 --quality-cutoff 10 -m 22 -a CTGTAGGCACCATCAAT -o $OUTPUT_R1 $R1 > $METRICS_FILE
 ```
 
-## Alignment
+3. Alignment
 
 Reads were aligned to Human Genome (hg38) using hisat2/2.1.0 and the following code:
 
@@ -34,19 +36,16 @@ for FILE in "${FILES[@]}"; do
     samtools index "$OUTPUT_DIR/${SAMPLE_NAME}.bam"
 done
 ```
-## Normalization
+4. Normalization
 
 BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RPKM normalization using deeptools/3.5.1
 
 ```
 bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig --normalizeUsing RPKM --binSize 1
 ```
+## Preparing files for ribosome density extraction
 
-# Fig. 5A
-
-## Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC
-
-1. xml wget command to obtain the 5'UTR sequences of all protein-coding genes
+1. Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC. xml wget command to obtain the 5'UTR sequences of all protein-coding genes
 
 ```
 wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?>
@@ -88,8 +87,16 @@ python parseNearCognates.py
 python extractCanonicalCoordinates.py
 ```
 
-# Extract the ribosome density around canonical and upstream codons 
-7. For each codon, canonical AUG, upstream AUG, upstream CUG, upstream GUG, and upstream AUC, run the following Python script:
+7. Now we have bed files for extracting ribo-seq ribosome density
+
+* 5utrNearCognatesATG.bed
+* 5utrNearCognatesCTG.bed
+* 5utrNearCognatesGTG.bed
+* 5utrNearCognatesATC.bed
+* canonicalStart.bed
+
+## Extract the ribosome density around canonical and upstream codons 
+1. For each codon, canonical AUG, upstream AUG, upstream CUG, upstream GUG, and upstream AUC, run the following Python script:
 
 ```
 BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/canonicalStart.bed"
@@ -108,9 +115,9 @@ BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCo
 python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_GTG.csv"
 ```
 
-# Rstudio analysis and plots
+## Rstudio analysis and plots
 
-Run the R code Density.Rmd. The markdown is Density.html. The data sets needed to reproduce the plots are:
+1. Run the R code Density.Rmd. The markdown is Density.html. The data sets needed to reproduce the plots are:
 * MH85_ATC.csv
 * MH85_ATG.csv
 * MH85_canonical.csv
