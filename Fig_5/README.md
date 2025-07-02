@@ -46,7 +46,7 @@ bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig
 
 ## Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC
 
-1. xml wget command which outputs results5UTR.fasta
+1. xml wget command to obtain the 5'UTR sequences of all protein-coding genes
 
 ```
 wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?>
@@ -65,12 +65,16 @@ wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml versi
 		<Attribute name = "external_gene_name" />
 	</Dataset>
 </Query>'
+
+Outputs: results5UTR.fasta
+
 ```
 2. Select the longest transcript per gene
 ```
 python parseFasta.py
 ```
-outputs: filtered5utr.fasta
+Inputs: results5UTR.fasta \
+Outputs: filtered5utr.fasta
 
 3. Coordinates for upstream instances of AUG, CUG, GUG, AUC
 ```
@@ -80,6 +84,7 @@ Inputs: filtered5utr.fasta \
 Outputs: 5utrNearCognates.bed
 
 4. Separate entries by codon
+
 ```
 python parseNearCognates.py
 ```
@@ -90,7 +95,36 @@ Outputs: 5utrNearCognatesATG.bed 5utrNearCognatesCTG.bed 5utrNearCognatesGTG.bed
 ```
 python extractCanonicalCoordinates.py
 ```
+Inputs: Homo_sapiens.GRCh38.113.chr.gtf
 Outputs: canonicalStart.bed (genomic coordinates of the canonical start codon)
 
-## Extract the ribosome density around canonical and upstream codons 
+# Extract the ribosome density around canonical and upstream codons 
+For each codon, Canonical AUG, Upstream AUG, Upstream CUG, Upstream GUG, and Upstream AUC, run the following pythos script:
 
+```
+BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/canonicalStart.bed"
+python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_canonical.csv"
+
+BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/5utrNearCognatesATC.bed"
+python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_ATC.csv"
+
+BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/5utrNearCognatesATG.bed"
+python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_ATG.csv"
+
+BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/5utrNearCognatesCTG.bed"
+python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_CTG.csv"
+
+BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/5utrNearCognatesGTG.bed"
+python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_GTG.csv"
+```
+Outputs: 
+* MH85_ATC.csv
+* MH85_ATG.csv
+* MH85_canonical.csv
+* MH85_CTG.csv
+* MH85_GTG.csv
+* MH87_ATC.csv
+* MH87_ATG.csv
+* MH87_canonical.csv
+* MH87_CTG.csv
+* MH87_GTG.csv
