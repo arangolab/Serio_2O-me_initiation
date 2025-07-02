@@ -41,3 +41,56 @@ BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RP
 ```
 bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig --normalizeUsing RPKM --binSize 1
 ```
+
+# Fig. 5A
+
+# Extract the coordinates of Canonical AUG, upstream AUG, CUG, GUG, and AUC
+
+1. xml wget command which outputs results5UTR.fasta
+
+```
+wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Query>
+<Query  virtualSchemaName = "default" formatter = "FASTA" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
+			
+	<Dataset name = "hsapiens_gene_ensembl" interface = "default" >
+		<Attribute name = "ensembl_gene_id" />
+		<Attribute name = "5utr" />
+		<Attribute name = "chromosome_name" />
+		<Attribute name = "start_position" />
+		<Attribute name = "end_position" />
+		<Attribute name = "ensembl_transcript_id" />
+		<Attribute name = "strand" />
+		<Attribute name = "transcript_length" />
+		<Attribute name = "external_gene_name" />
+	</Dataset>
+</Query>'
+```
+2. Select for the longest transcript per gene
+```
+python parseFasta.py
+```
+outputs: filtered5utr.fasta
+
+3. Coordinates for upstream instances of AUG, CUG, GUG, AUC
+```
+python fastaToBed.py
+```
+Inputs: filtered5utr.fasta \
+Outputs: 5utrNearCognates.bed
+
+4. Separate entries by codon
+```
+python parseNearCognates.py
+```
+Inputs: 5utrNearCognates.bed
+Outputs: 5utrNearCognatesATG.bed 5utrNearCognatesCTG.bed 5utrNearCognatesGTG.bed 
+
+6. Extract the location of the first nucleotide of the canonical AUG start from GTF file 
+```
+python extractCanonicalCoordinates.py
+```
+Outputs: canonicalStart.bed (genomic coordinates of the canonical start codon)
+
+# Extract the ribosome density around canonical and upstream codons 
+
