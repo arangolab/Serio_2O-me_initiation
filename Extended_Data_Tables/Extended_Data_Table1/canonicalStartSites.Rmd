@@ -1,0 +1,78 @@
+---
+title: "CanonicalStartSites"
+author: "Hannah Serio"
+date: "2025-05-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tibble)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(openxlsx)
+```
+
+```{r savingBedFile, eval=FALSE}
+
+# Helper function to load and format each file
+load_and_format <- function(file_path, reference, cell_line) {
+  df <- read.table(file_path, header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+  # Assign fixed column names based on expected structure
+  colnames(df) <- c("Chr", "Nm_Position", "Nm_Position2", "mRNA", "GeneX", "Strand", "Chr2","posx", "posX2", "Gene", "Score", "Strand2", "Nm_Position_Transcript")
+
+  # Add fixed Codon value and metadata
+  df$Codon <- "AUG"
+  df$Reference <- reference
+  df$Cell_Line <- cell_line
+
+  # Reorder columns
+  df <- df[, c("Chr", "Nm_Position", "Gene", "Strand", "Codon", "Reference", "Cell_Line", "Nm_Position_Transcript")]
+  return(df)
+}
+
+# Load and format all datasets
+datasets <- list(
+  nmHELA     = load_and_format("./nmseq/HeLaCanonicalStartNm.bed", "Nm-seq", "HeLa"),
+  nmmtHELA   = load_and_format("./nmmtseq/HeLaCanonicalStartNm.bed", "Nm-mut-seq", "HeLa"),
+  njuHELA    = load_and_format("./nju/HeLaCanonicalStartNm.bed", "NJU-seq", "HeLa"),
+  mlmHELA    = load_and_format("./mlm/HeLaCanonicalStart0basedNm.bed", "Nanopore", "HeLa"),
+
+  nmHEK      = load_and_format("./nmseq/HEKCanonicalStartNm.bed", "Nm-seq", "HEK293T"),
+  njuHEK     = load_and_format("./nju/HEKCanonicalStartNm.bed", "NJU-seq", "HEK293T"),
+  mlmHEK     = load_and_format("./mlm/HEKCanonicalStart0basedNm.bed", "Nanopore", "HEK293T"),
+
+  nmmtHEPG2  = load_and_format("./nmmtseq/HepG2CanonicalStartNm.bed", "Nm-mut-seq", "HepG2"),
+  mlmHEPG2   = load_and_format("./mlm/HepG2CanonicalStart0basedNm.bed", "Nanopore", "HepG2"),
+
+  njuA549    = load_and_format("./nju/A549CanonicalStartNm.bed", "NJU-seq", "A549")
+)
+
+# combine all datasets
+all_data <- do.call(rbind, datasets)
+
+dedup_data <- all_data %>%
+  distinct(Chr, Nm_Position, Strand, Reference, Cell_Line, .keep_all = TRUE)
+
+# create sheet labels like -1Nm, +1Nm, etc.
+dedup_data <- dedup_data %>%
+  mutate(
+    Sheet_Label = ifelse(Nm_Position_Transcript < 0,
+                         paste0(Nm_Position_Transcript, "Nm"),
+                         paste0("+", Nm_Position_Transcript, "Nm"))
+  )
+
+# split the data by label
+split_by_sheet <- split(dedup_data, dedup_data$Sheet_Label)
+
+# remove unnecessary columns from excel
+split_by_sheet <- lapply(split_by_sheet, function(df) {
+  df %>% select(-Nm_Position_Transcript, -Sheet_Label)
+})
+
+# Step 4: Write to Excel file
+write.xlsx(split_by_sheet, file = "CanonicalStartNm.xlsx", rowNames = FALSE)
+```

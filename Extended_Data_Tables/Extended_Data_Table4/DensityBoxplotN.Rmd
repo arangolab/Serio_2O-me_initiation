@@ -1,0 +1,201 @@
+---
+title: "Density Boxplot"
+author: "Hannah Serio"
+date: "6/10/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(ggpubr)
+library(tibble)
+library(ggplot2)
+library(writexl)
+```
+
+
+```{r formatting, cache=TRUE}
+
+## No longer filtering to exclude positions with low ribosome density
+# function to process ribo-seq RPKM around +1 position 
+process_position <- function(atg_profile) {
+  
+  cols_to_keep <- c("chrom", "start", "end", "gene", "strand", "0")
+  
+  # Load data
+  MH85_data <- read_csv(paste0("MH85_", atg_profile, ".csv"), col_select = all_of(cols_to_keep))
+  MH87_data <- read_csv(paste0("MH87_", atg_profile, ".csv"), col_select = all_of(cols_to_keep))
+  
+  
+  # Merge data frames
+  atg <- Reduce(function(x, y) merge(x, y, by = c("chrom", "start", "end", "gene", "strand"), all = FALSE), 
+                list(MH85_data, MH87_data))
+  
+  # Remove duplicates based on "chrom", "start", "end", and "strand"
+  atg <- atg %>% distinct(chrom, start, end, strand, .keep_all = TRUE)
+  
+  atg[["avgRPKM"]] <- rowMeans(atg[, c("0.x", "0.y")], na.rm = TRUE)
+  
+  # remove rows with an average RPKM below 1
+  atg <- atg[!apply(atg["avgRPKM"] <= 1, 1, any), ]
+  
+  return(atg)
+}
+
+####-------------------------
+#### Process Codon Profiles
+####-------------------------
+
+average_canonical <- process_position("canonical")
+average_canonicalNm <- process_position("canonicalNm")
+
+average_upstreamATG <- process_position("ATG")
+average_upstreamATGNm <- process_position("ATGNm")
+
+average_upstreamCTG <- process_position("CTG")
+average_upstreamCTGNm <- process_position("CTGNm")
+
+average_upstreamGTG <- process_position("GTG")
+average_upstreamGTGNm <- process_position("GTGNm")
+
+average_upstreamATC <- process_position("ATC")
+average_upstreamATCNm <- process_position("ATCNm")
+
+# exclude genes from average_canonical that do not contain an upstream ATG/CTG/GTG/ATC
+average_canonicalATG <- average_canonical %>%
+  filter(gene %in% average_upstreamATG$gene)
+
+average_canonicalCTG <- average_canonical %>%
+  filter(gene %in% average_upstreamCTG$gene)
+
+average_canonicalGTG <- average_canonical %>%
+  filter(gene %in% average_upstreamGTG$gene)
+
+average_canonicalATC <- average_canonical %>%
+  filter(gene %in% average_upstreamATC$gene)
+
+####-------------------------
+#### Calculate RPKM ratios
+####-------------------------
+
+# Function to calculate the ratio of RPKM values between upstream and canonical ATGs
+# Handles multiple upstream ATGs for the same gene
+calculate_rpkm_ratios <- function(upstream_data, canonical_data) {
+  
+  # Create an empty data frame to store results
+  ratio_df <- data.frame(gene = character(),
+                         chrom = character(),
+                         start = numeric(),
+                         end = numeric(),
+                         strand = character(),
+                         upstream_rpkm = numeric(),
+                         canonical_rpkm = numeric(),
+                         ratio = numeric(),
+                         stringsAsFactors = FALSE)
+  
+  # Iterate through each row in upstream data
+  for (i in 1:nrow(upstream_data)) {
+    gene_id <- upstream_data$gene[i]
+    upstream_rpkm_raw <- upstream_data$avgRPKM[i]
+    
+    # Convert upstream RPKM to numeric and check for NA
+    upstream_rpkm <- as.numeric(upstream_rpkm_raw)
+    
+    # extract identifying information for this upstream CTG
+    chrom <- upstream_data$chrom[i]
+    start <- upstream_data$start[i]
+    end <- upstream_data$end[i]
+    strand <- upstream_data$strand[i]
+    
+    # Find the corresponding canonical data for this gene
+    canonical_row <- canonical_data[canonical_data$gene == gene_id, ]
+    
+    # If the gene exists in canonical data, calculate the ratio
+    if (nrow(canonical_row) > 0) {
+      canonical_rpkm_raw <- canonical_row$avgRPKM[1]  # There should be only one canonical ATG per gene
+      
+      # Convert canonical RPKM to numeric and check for NA
+      canonical_rpkm <- as.numeric(canonical_rpkm_raw)
+      
+      # Skip this upstream site if canonical RPKM is NA
+      if (is.na(canonical_rpkm)) {
+        next  # Skip to next iteration
+      }
+      
+      ratio <- upstream_rpkm / canonical_rpkm
+      
+      # Add to results data frame
+      ratio_df <- rbind(ratio_df, data.frame(gene = gene_id,
+                                            chrom = chrom,
+                                            start = start,
+                                            end = end,
+                                            strand = strand,
+                                            upstream_rpkm = upstream_rpkm,
+                                            canonical_rpkm = canonical_rpkm,
+                                            ratio = ratio,
+                                            stringsAsFactors = FALSE))
+    }
+  }
+
+  
+  return(ratio_df)
+}
+
+# Calculate ratios for both datasets
+ATG_ratios <- calculate_rpkm_ratios(average_upstreamATG, average_canonicalATG)
+ATGnm_ratios <- calculate_rpkm_ratios(average_upstreamATGNm, average_canonicalNm)
+
+CTG_ratios <- calculate_rpkm_ratios(average_upstreamCTG, average_canonicalCTG)
+CTGnm_ratios <- calculate_rpkm_ratios(average_upstreamCTGNm, average_canonicalNm)
+
+GTG_ratios <- calculate_rpkm_ratios(average_upstreamGTG, average_canonicalGTG)
+GTGnm_ratios <- calculate_rpkm_ratios(average_upstreamGTGNm, average_canonicalNm)
+
+ATC_ratios <- calculate_rpkm_ratios(average_upstreamATC, average_canonicalATC)
+ATCnm_ratios <- calculate_rpkm_ratios(average_upstreamATCNm, average_canonicalNm)
+
+# Add a column to identify the dataset
+ATG_ratios$dataset <- "AUG"
+ATGnm_ratios$dataset <- "AmUG"
+
+CTG_ratios$dataset <- "CUG"
+CTGnm_ratios$dataset <- "CmUG"
+
+GTG_ratios$dataset <- "GUG"
+GTGnm_ratios$dataset <- "GmUG"
+
+ATC_ratios$dataset <- "AUC"
+ATCnm_ratios$dataset <- "AmUC"
+
+standardize_ratios <- function(df) {
+  df %>%
+    mutate(
+      chrom = as.character(chrom),
+      start = as.integer(start),
+      gene = as.character(gene),
+      strand = as.character(strand),
+      ratio = as.numeric(ratio),
+      dataset = as.character(dataset)
+    ) %>%
+    filter(!is.na(ratio)) %>%
+    select(chrom, start, gene, strand, ratio, dataset)
+}
+
+# Apply to all datasets
+all_ratios <- bind_rows(
+  standardize_ratios(ATG_ratios),
+  standardize_ratios(ATGnm_ratios),
+  standardize_ratios(CTG_ratios),
+  standardize_ratios(CTGnm_ratios),
+  standardize_ratios(GTG_ratios),
+  standardize_ratios(GTGnm_ratios),
+  standardize_ratios(ATC_ratios),
+  standardize_ratios(ATCnm_ratios)
+)
+
+# Write to Excel file
+write_xlsx(all_ratios, "RPKMratios.xlsx")
+
+```
