@@ -1,12 +1,14 @@
-# HR-Ribo-seq Processing
+# Fig. 5B
 
-## Samples
+## HR-Ribo-seq Processing
+
+1. Samples
 The following datasets were downloaded from GEO (GSE162043, Arango et al, 2022 Mol Cell)
 
 GSM4932133	HR_RPF_HeLa_WT_rep1 \
 GSM4932134	HR_RPF_HeLa_WT_rep2
 
-## Pre-processing
+2. Pre-processing
 
 Adapters were trimmed using cutadapt/4.2 and the following code:
 
@@ -15,7 +17,7 @@ Adapters were trimmed using cutadapt/4.2 and the following code:
 cutadapt --match-read-wildcards -e 0.1 -O 1 --quality-cutoff 10 -m 22 -a CTGTAGGCACCATCAAT -o $OUTPUT_R1 $R1 > $METRICS_FILE
 ```
 
-## Alignment
+3. Alignment
 
 Reads were aligned to Human Genome (hg38) using hisat2/2.1.0 and the following code:
 
@@ -34,7 +36,7 @@ for FILE in "${FILES[@]}"; do
     samtools index "$OUTPUT_DIR/${SAMPLE_NAME}.bam"
 done
 ```
-## Normalization
+4. Normalization
 
 BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RPKM normalization using deeptools/3.5.1
 
@@ -42,7 +44,8 @@ BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RP
 bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig --normalizeUsing RPKM --binSize 1
 ```
 
-# Fig. 5B
+# Prepping files for ribosome density extraction
+
 
 1. Extract the coordinates and genes for Nm[+1] for all ATG, CTG, GTG, ATC codons, and output a list of any genes containing Nm.
 
@@ -73,7 +76,7 @@ python extractATGcoordinates.py
 *pos1Nm<CODON>.bed # genomic coordinates for Nm[+1] within the 5UTR
 
 # Extract the ribosome density
-6. Run the following Python script:
+1. Run the following Python script:
 
 ```
 # genomic coordinates for 'A' in canonical 'ATG' start codon for genes without Nm present
@@ -108,7 +111,7 @@ BED_FILE="~/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAM
 ```
 
 # Rstudio analysis and plots
-7. Run the R code DensityBoxplotN.Rmd. The markdown is DensityBoxplotN.html. The data sets needed to reproduce the plots are:
+1. Run the R code DensityBoxplotN.Rmd. The markdown is DensityBoxplotN.html. The data sets needed to reproduce the plots are:
 
 * MH85_ATC.csv
 * MH85_ATCNm.csv
