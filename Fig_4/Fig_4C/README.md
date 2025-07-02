@@ -147,4 +147,7 @@ The following script outputs a count of every occurance of a codon.
 python countCodonsRibo.py
 ```
 ## Analyzing codon biases of near-cognate codons for Nm[+1] vs 5'UTRs of expressed genes
-```codonBias.Rmd``` generates a barplot comparing codon biases in near-cognate codons. 
+```codonBias.Rmd``` generates a barplot comparing codon biases in near-cognate codons. The markdown is codonBias.html.
+The data sets needed to reproduce the plots are:
+* 5utrCodonCountsRiboSeq.csv
+* pos1CodonFreq.txt

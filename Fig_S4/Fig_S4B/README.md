@@ -1,4 +1,4 @@
-# Extended Data 4B: Nm site around canonical start codons in human mRNAs
+# Extended Data 4B
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -143,4 +143,15 @@ bedtools intersect -a GSE104532_HeLamRNA.Nm.genome_sorted.bed -b start_codon_fla
 bedtools intersect -a GSE104532_HEKmRNA.Nm.genome_sorted.bed -b start_codon_flanks.bed -wa -wb -s > HEKCanonicalStart.bed
 ```
 ## Analyzing Nm sites in canonical start codons per study and cell line. 
-```canonicalStartSites.Rmd``` creates dotplots showing the distribution of Nm sites around canonical start codons per study and cell line. 
+```canonicalStartSites.Rmd``` creates dotplots showing the distribution of Nm sites around canonical start codons per study and cell line. The markdown is canonicalStartSites.html.
+The data sets needed to reproduce the plots are:
+* ./nmseq/HeLaCanonicalStartNm.bed
+* ./nmmtseq/HeLaCanonicalStartNm.bed
+* ./nju/HeLaCanonicalStartNm.bed
+* ./mlm/HeLaCanonicalStart0basedNm.bed
+* ./nmseq/HEKCanonicalStartNm.bed
+* ./nju/HEKCanonicalStartNm.bed
+* ./mlm/HEKCanonicalStart0basedNm.bed
+* ./nmmtseq/HepG2CanonicalStartNm.bed
+* ./mlm/HepG2CanonicalStart0basedNm.bed
+* ./nju/A549CanonicalStartNm.bed

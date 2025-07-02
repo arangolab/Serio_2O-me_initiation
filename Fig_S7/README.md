@@ -1,4 +1,4 @@
-# Figure S7: Gene ontology analysis for Nm[+1] Genes
+# Extended Data 7
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -120,4 +120,8 @@ python collectAllNm.py
 ```
 Outputs allGene_1.bed.
 ## GO Analysis for Nm[+1] genes per Nm near-cognate codon
-```plus1GOAnalysis.Rmd``` generates dot plots for gene ontologies for Nm[+1] sites per near-cognate codon. 
+```plus1GOAnalysis.Rmd``` generates dot plots for gene ontologies for Nm[+1] sites per near-cognate codon. The markdown is plus1GOAnalysis.html.
+The data sets needed to reproduce the plots are:
+* nugNMgenes.txt
+* cugNMgenes.txt
+* gugNMgenes.txt
