@@ -117,7 +117,7 @@ python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/
 
 ## Rstudio analysis and plots
 
-1. Run the R code Density.Rmd. The markdown is Density.html. The data sets needed to reproduce the plots are:
+1. Run the R code Density_LineGraph.Rmd. The markdown is Density_LineGraph.html. The data sets needed to reproduce the plots are:
 * MH85_ATC.csv
 * MH85_ATG.csv
 * MH85_canonical.csv
