@@ -18,22 +18,22 @@ library(openxlsx)
 ## processing all files prior to plotting
 ```{r file formatting}
 # HELA
-nmHELA <- read.table("./nmseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-nmmtHELA <- read.table("./nmmtseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-njuHELA <- read.table("./nju/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-mlmHELA <- read.table("./mlm/HeLaCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmHELA <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nmseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmmtHELA <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nmmtseq/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+njuHELA <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nju/HeLaCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHELA <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/mlm/HeLaCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 # HEK
-nmHEK <- read.table("./nmseq/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-njuHEK <- read.table("./nju/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-mlmHEK <- read.table("./mlm/HEKCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmHEK <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nmseq/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+njuHEK <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nju/HEKCanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEK <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/mlm/HEKCanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 # HepG2
-nmmtHEPG2 <- read.table("./nmmtseq/HepG2CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-mlmHEPG2 <- read.table("./mlm/HepG2CanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmmtHEPG2 <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nmmtseq/HepG2CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEPG2 <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/mlm/HepG2CanonicalStart0basedNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 # A549
-njuA549 <- read.table("./nju/A549CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+njuA549 <- read.table("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/canonicalStartSites/nju/A549CanonicalStartNm.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 data_list <- list(
   nmHELA = nmHELA,
