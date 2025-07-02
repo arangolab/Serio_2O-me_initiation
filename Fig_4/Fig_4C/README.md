@@ -1,4 +1,4 @@
-# Extended Data 4B: Nm site around canonical start codons in human mRNAs
+# Figure 4C: Codon Biases
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -113,5 +113,38 @@ Once the sequence was extracted, another script was used to identify Nm sites ar
 ```
 python cognates.py -i "$BED_SEQ" -o "$BED_COGNATES"
 ```
-## Analyzing Nm [+1] sites across AUG's and near-cognates 
-```2omecognates_study.Rmd``` generates a barplot showing the distribution of Nm[+1] sites per near-cognate codon. 
+## Extracting Nm[+1] Sites from other Nm positions
+We extracted Nm[+1] sites into ```mlmHEKCodons.bed, mlmHeLaCodons.bed, mlmHepG2Codons.bed, njuA549Codons.bed, njuHeLaCodons.bed, njuHEKCodons.bed, nmHEKCodons.bed, nmHeLaCodons.bed, nmmtHeLaCodons.bed, and nmmtHepG2Codons.bed```. From these files, we extracted a list of all genes containing Nm[+1] and counts the occurance of each codon with the script below. 
+```
+python analyzedGenes.py
+```
+## Identifying near-cognate codon frequency in 5'UTRs
+Using a list of genes that were known to be expressed in HR Ribo-seq, we extracted a FASTA file containing 5'UTR sequences for genes of interest from Ensembl's biomart. 
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Query>
+<Query  virtualSchemaName = "default" formatter = "FASTA" header = "0" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" >
+				
+	<Dataset name = "hsapiens_gene_ensembl" interface = "default" >
+		<Filter name = "external_gene_name" value = riboSeqGenes.txt />
+		<Attribute name = "5utr" />
+		<Attribute name = "chromosome_name" />
+		<Attribute name = "start_position" />
+		<Attribute name = "end_position" />
+		<Attribute name = "external_gene_name" />
+		<Attribute name = "ensembl_transcript_id" />
+		<Attribute name = "transcript_length" />
+		<Attribute name = "strand" />
+	</Dataset>
+</Query>
+```
+Using this FASTA file, we selected for the longest recorded 5'UTR per gene. The following script outputs a count of each codon present.
+```
+python parseFastaRibo.py
+```
+The following script outputs a count of every occurance of a codon.
+```
+python countCodonsRibo.py
+```
+## Analyzing codon biases of near-cognate codons for Nm[+1] vs 5'UTRs of expressed genes
+```codonBias.Rmd``` generates a barplot comparing codon biases in near-cognate codons. 

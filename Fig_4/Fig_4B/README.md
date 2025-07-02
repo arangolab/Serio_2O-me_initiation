@@ -1,4 +1,4 @@
-# Figure 4B: Nm site around canonical start codons in human mRNAs
+# Figure 4B: Prevalence of Nm[+1] per Codon
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
