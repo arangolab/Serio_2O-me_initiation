@@ -23,7 +23,7 @@ Reads were aligned to Human Genome (hg38) using hisat2/2.1.0 and the following c
 hisat2 -q -x "$reference_genome" -U "$R1" -S "$OUTPUT_DIR/${SAMPLE_NAME}.sam" --summary-file $OUTPUT_DIR/${SAMPLE_NAME}.txt
 ```
 
-Sam files were then converted to BAM format, sorted, and indexed using samtools/1.6:
+SAM files were then converted to BAM format, sorted, and indexed using samtools/1.6:
 
 ```
 for FILE in "${FILES[@]}"; do
@@ -33,4 +33,11 @@ for FILE in "${FILES[@]}"; do
     samtools view -bS "$FILE" | samtools sort -o "$OUTPUT_DIR/${SAMPLE_NAME}.bam" -
     samtools index "$OUTPUT_DIR/${SAMPLE_NAME}.bam"
 done
+```
+## Normalization
+
+BAM files were converted to BIGWIG format using a bin of 1 nucleotide and the RPKM normalization using deeptools/3.5.1
+
+```
+bamCoverage -b "$FILE" -o "$OUTPUT_DIR/${SAMPLE_NAME}.bw" --outFileFormat bigwig --normalizeUsing RPKM --binSize 1
 ```
