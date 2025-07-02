@@ -1,0 +1,156 @@
+---
+title: "Density"
+author: "Hannah Serio"
+date: "5/20/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(ggpubr)
+library(tibble)
+library(ggplot2)
+```
+
+
+```{r density_line, message=FALSE, warning = FALSE, fig.width=12, fig.height=5, fig.path='densityLineGraph/', dev=c('png', 'pdf')}
+# function to process Nm bed files and overlay them with ribo-seq results to get RPKM around Nm position 
+process_position <- function(atg_profile) {
+  # Load data
+  MH85_data <- read_csv(paste0("MH85_", atg_profile, ".csv"))
+  MH87_data <- read_csv(paste0("MH87_", atg_profile, ".csv"))
+  
+  # Merge data frames
+  atg <- Reduce(function(x, y) merge(x, y, by = c("chrom", "start", "end", "gene", "strand"), all = FALSE), 
+                list(MH85_data, MH87_data))
+  
+  # Remove duplicates based on "chrom", "start", "end", and "strand"
+  atg <- atg %>% distinct(chrom, start, end, strand, .keep_all = TRUE)
+  
+  # Compute the average for the rest of the columns
+  value_columns <- setdiff(names(MH85_data), c("chrom", "start", "end", "gene", "strand"))
+  
+  for (column in value_columns) {
+    atg[[column]] <- rowMeans(atg[, c(paste0(column, ".x"), paste0(column, ".y"))], na.rm = TRUE)
+    atg <- atg %>% select(-paste0(column, ".x"), -paste0(column, ".y"))
+  }
+  
+  # Remove rows where any value in columns 6 to 35 is 0
+  # Save number of rows before filtering
+  n_before <- nrow(atg)
+
+  # Filter out rows where any value in columns 6 to 35 is <= 1
+  atg <- atg[!apply(atg[, 6:35] <= 1, 1, any), ]
+
+  # Save number of rows after filtering
+  n_after <- nrow(atg)
+
+  # Print diagnostic message
+  cat("Processing", atg_profile, ":", n_before - n_after, "rows removed,", n_after, "rows retained.\n")
+  
+  # Compute the average for columns 6 to 35
+  selected_columns <- atg[, 6:35]
+  average_values <- colMeans(selected_columns, na.rm = TRUE)
+  
+  position_sequence <- seq(-13, 16, length.out = length(average_values))
+  
+  # Transform the result into a two-column data frame
+  average_atg <- data.frame(
+    Pos = position_sequence,
+    average = average_values,
+    n = n_after,
+    sample = paste0(atg_profile)
+  )
+  
+  return(average_atg)
+}
+
+####-------------------------
+#### Process Profiles
+####-------------------------
+
+average_canonical <- process_position("canonical")
+average_ATG <- process_position("ATG")
+average_CTG <- process_position("CTG")
+average_GTG <- process_position("GTG")
+average_ATC <- process_position("ATC")
+
+####-------------------------
+#### Append averages together
+####-------------------------
+
+all_RPKM <- rbind(
+  average_canonical,
+  average_ATG,
+  average_CTG,
+  average_GTG,
+  average_ATC
+)
+
+all_RPKM <- all_RPKM %>%
+  arrange(Pos)
+
+
+# Calculate n for each sample (following your working code pattern)
+sample_n <- all_RPKM %>%
+  group_by(sample) %>%
+  summarise(n = first(n))  # since n is repeated per position
+
+print("Sample counts:")
+print(sample_n)
+
+# Create proper sample labels with n values
+sample_labels <- c(
+  "canonical" = "Canonical AUG",
+  "ATG" = "Upstream AUG", 
+  "CTG" = "Upstream CUG",
+  "GTG" = "Upstream GUG",
+  "ATC" = "Upstream AUC"
+)
+
+# Add n= to labels
+sample_labels_with_n <- paste0(sample_labels[sample_n$sample], " (n=", sample_n$n, ")")
+names(sample_labels_with_n) <- sample_n$sample
+
+print("Labels with n:")
+print(sample_labels_with_n)
+
+# Ensure data is properly sorted by position
+all_RPKM <- all_RPKM %>%
+  arrange(Pos)
+
+lineplot <- ggplot(all_RPKM, aes(x = Pos, y = average, color = sample)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_color_manual(
+    values = c(
+      "canonical" = "#3498db",
+      "ATG" = "#e74c3c", 
+      "CTG" = "#f39c12",
+      "GTG" = "#f1c40f",
+      "ATC" = "#2ecc71"
+    ),
+    labels = sample_labels_with_n
+  ) +
+  scale_x_continuous(breaks = seq(-13, 16, 2)) +
+  labs(
+    title = "Average RPKM Values for Canonical AUG vs Upstream Near-Cognate Codons",
+    x = "Position in Transcript",
+    y = "Average RPKM", 
+    color = "Codon Identity"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line = element_line(size = 1),
+    axis.ticks = element_line(size = 1),
+  )
+print(lineplot)
+
+```
