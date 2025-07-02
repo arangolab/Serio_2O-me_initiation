@@ -73,7 +73,7 @@ awk 'NR > 1 { print $1, $2, $3 - 1, $4, $8, $10 }' OFS="\t" HepG2location0based_
 These BED files can now be analyzed in parallel with the datasets from the other publications.
 
 ### NJU-seq (Tang et. al. 2024)
-Table S2 (excel file) contains Nm sites detected in HEK293T, HeLa, and A549 cell lines. Each sheet contains the results for each cell line. Columns 'Chr', 'Position', 'Strand', 'Nm', 'ID', 'Name', and 'Distribution' were extracted from the original excel file into ```A549_Filtered.txt, HEK_Filtered.txt, and HeLa_Filtered.txt```. These files needed to be reformatted for downstream analysis.
+Table S2 (excel file) contains Nm sites detected in HEK293T, HeLa, and A549 cell lines. Each sheet contains the results for each cell line. Columns 'Chr', 'Position', 'Strand', 'Nm', 'ID', 'Name', and 'Distribution' were extracted from the original excel file into separate files per cell line (*_Filtered.txt). These files needed to be reformatted for downstream analysis.
 ```
 awk 'BEGIN{OFS="\t"} {if ($6=="Forward") $6="+"; else if ($6=="Reverse") $6="-"; print}' A549_Filtered.txt | sort -k1,1 -k2,2n > A549_allSites.bed
 awk 'BEGIN{OFS="\t"} {if ($6=="Forward") $6="+"; else if ($6=="Reverse") $6="-"; print}' HEK_Filtered.txt | sort -k1,1 -k2,2n > HEK_allSites.bed
@@ -94,8 +94,8 @@ Nm site maps were downloaded from GSE90164. These BED files contained strand inf
 
 Bedtools intersect was used to add all mRNA consequences per Nm site. (see Nanopore-DRS section for the generation of genomeConsequence0based.bed)
 ```
-bedtools intersect -a GSE104532_HeLamRNA.Nm.genome_sorted.bed -b genomeConsequence0based.bed -wa -wb -s > HeLaNm.hg38noLiftover_annotated.bed
-bedtools intersect -a GSE104532_HEKmRNA.Nm.genome_sorted.bed -b genomeConsequence0based.bed -wa -wb -s > HEKNm.hg38noLiftover_annotated.bed
+bedtools intersect -a GSE90164_HeLamRNA.Nm.genome_sorted.bed -b genomeConsequence0based.bed -wa -wb -s > HeLaNm.hg38noLiftover_annotated.bed
+bedtools intersect -a GSE90164_HEKmRNA.Nm.genome_sorted.bed -b genomeConsequence0based.bed -wa -wb -s > HEKNm.hg38noLiftover_annotated.bed
 ```
 Since different transcripts from the same gene may have different mRNA consequences at an Nm site, this script only includes the most common consequence per Nm site. 
 ```

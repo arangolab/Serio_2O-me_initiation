@@ -18,9 +18,9 @@ library(ggplot2)
 ## NJU-seq Study
 ```{r NJU plots, warning=FALSE, fig.width=6, fig.height=5, fig.path='R_plots/every2OsiteNJU', dev=c('png', 'pdf')}
 # read Excel file
-njuHELA <- read_excel("./nju_seq/NJUSeq_Data.xlsx", sheet = "HeLa")
-njuA549 <- read_excel("./nju_seq/NJUSeq_Data.xlsx", sheet = "A549")
-njuHEK <- read_excel("./nju_seq/NJUSeq_Data.xlsx", sheet = "HEK293T")
+njuHELA <- read_excel("NJUSeq_Data.xlsx", sheet = "HeLa")
+njuA549 <- read_excel("NJUSeq_Data.xlsx", sheet = "A549")
+njuHEK <- read_excel("NJUSeq_Data.xlsx", sheet = "HEK293T")
 
 # Filter for relevant info
 njuHELA_df <- njuHELA %>%
@@ -121,8 +121,8 @@ njuplot
 ## Nm-mt seq Study
 ```{r Nmmt-seq, warning=FALSE, fig.width=6, fig.height=5, fig.path='R_plots/every2OsiteNMMT', dev=c('png', 'pdf')}
 
-nmmtHEPG2 <- read_excel("./nmmtseq/Nm-Mut-seq Supplementary Tables.xlsx", sheet = "S6_HepG2_mRNA_WT", skip = 2)
-nmmtHELA <- read_excel("./nmmtseq/Nm-Mut-seq Supplementary Tables.xlsx", sheet = "S5_HeLa_mRNA_WT", skip = 2)
+nmmtHEPG2 <- read_excel("Nm-Mut-seq Supplementary Tables.xlsx", sheet = "S6_HepG2_mRNA_WT", skip = 2)
+nmmtHELA <- read_excel("Nm-Mut-seq Supplementary Tables.xlsx", sheet = "S5_HeLa_mRNA_WT", skip = 2)
 
 summarize_biotype_segment_counts <- function(df) {
   five_utr_count <- sum(df$`mRNA segment` == "5'UTR'", na.rm = TRUE)
@@ -158,9 +158,9 @@ nmmtplot
 ## Nanopore Study
 ```{r Nanopore, warning=FALSE, fig.width=6, fig.height=5, fig.path='R_plots/every2OsiteNanopore', dev=c('png', 'pdf')}
 
-mlmHELA <- read.table("./mlm/HeLalocation0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-mlmHEPG2 <- read.table("./mlm/HepG2location0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-mlmHEK <- read.table("./mlm/HEKlocation0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+mlmHELA <- read.table("HeLalocation0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEPG2 <- read.table("HepG2location0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+mlmHEK <- read.table("HEKlocation0based_filtered.bed", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
 summarize_consequence_counts <- function(df) {
   five_utr_count <- sum(df$consequence == "5UTR", na.rm = TRUE)
@@ -197,8 +197,8 @@ mlmplot
 ## Nm-seq Study
 ```{r Nm-seq, warning=FALSE, fig.width=6, fig.height=5, fig.path='R_plots/every2OsiteNmSeq', dev=c('png', 'pdf')}
 
-nmHELA <- read.table("./nmseq/original_bed/HeLaNm.hg38noLiftover_filtered.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
-nmHEK <- read.table("./nmseq/original_bed/HEKNm.hg38noLiftover_filtered.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmHELA <- read.table("HeLaNm.hg38noLiftover_filtered.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+nmHEK <- read.table("HEKNm.hg38noLiftover_filtered.bed", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 summarize_consequence_counts <- function(df) {
   five_utr_count <- sum(df[[4]] == "5UTR", na.rm = TRUE)

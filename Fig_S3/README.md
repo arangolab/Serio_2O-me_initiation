@@ -1,3 +1,4 @@
+# Extended Data 3
 # Cryptic Initiation Sites in Human 5'UTRs
 
 Figures S3A,B,C, and E were generated using the code Fig_S3.Rmd - The markdown is exported as Fig_S3.html

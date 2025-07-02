@@ -360,7 +360,7 @@ display: none;
 <div id="nju-seq-study" class="section level2">
 <h2>NJU-seq Study</h2>
 <pre class="r"><code># read Excel file
-njuHELA &lt;- read_excel(&quot;./nju_seq/NJUSeq_Data.xlsx&quot;, sheet = &quot;HeLa&quot;)</code></pre>
+njuHELA &lt;- read_excel(&quot;NJUSeq_Data.xlsx&quot;, sheet = &quot;HeLa&quot;)</code></pre>
 <pre><code>## New names:
 ## • `` -&gt; `...11`
 ## • `` -&gt; `...12`
@@ -368,7 +368,7 @@ njuHELA &lt;- read_excel(&quot;./nju_seq/NJUSeq_Data.xlsx&quot;, sheet = &quot;H
 ## • `` -&gt; `...27`
 ## • `` -&gt; `...28`
 ## • `` -&gt; `...29`</code></pre>
-<pre class="r"><code>njuA549 &lt;- read_excel(&quot;./nju_seq/NJUSeq_Data.xlsx&quot;, sheet = &quot;A549&quot;)</code></pre>
+<pre class="r"><code>njuA549 &lt;- read_excel(&quot;NJUSeq_Data.xlsx&quot;, sheet = &quot;A549&quot;)</code></pre>
 <pre><code>## New names:
 ## • `` -&gt; `...11`
 ## • `` -&gt; `...12`
@@ -376,7 +376,7 @@ njuHELA &lt;- read_excel(&quot;./nju_seq/NJUSeq_Data.xlsx&quot;, sheet = &quot;H
 ## • `` -&gt; `...27`
 ## • `` -&gt; `...28`
 ## • `` -&gt; `...29`</code></pre>
-<pre class="r"><code>njuHEK &lt;- read_excel(&quot;./nju_seq/NJUSeq_Data.xlsx&quot;, sheet = &quot;HEK293T&quot;)</code></pre>
+<pre class="r"><code>njuHEK &lt;- read_excel(&quot;NJUSeq_Data.xlsx&quot;, sheet = &quot;HEK293T&quot;)</code></pre>
 <pre><code>## New names:
 ## • `` -&gt; `...11`
 ## • `` -&gt; `...12`
@@ -482,8 +482,8 @@ njuplot</code></pre>
 </div>
 <div id="nm-mt-seq-study" class="section level2">
 <h2>Nm-mt seq Study</h2>
-<pre class="r"><code>nmmtHEPG2 &lt;- read_excel(&quot;./nmmtseq/Nm-Mut-seq Supplementary Tables.xlsx&quot;, sheet = &quot;S6_HepG2_mRNA_WT&quot;, skip = 2)
-nmmtHELA &lt;- read_excel(&quot;./nmmtseq/Nm-Mut-seq Supplementary Tables.xlsx&quot;, sheet = &quot;S5_HeLa_mRNA_WT&quot;, skip = 2)
+<pre class="r"><code>nmmtHEPG2 &lt;- read_excel(&quot;Nm-Mut-seq Supplementary Tables.xlsx&quot;, sheet = &quot;S6_HepG2_mRNA_WT&quot;, skip = 2)
+nmmtHELA &lt;- read_excel(&quot;Nm-Mut-seq Supplementary Tables.xlsx&quot;, sheet = &quot;S5_HeLa_mRNA_WT&quot;, skip = 2)
 
 summarize_biotype_segment_counts &lt;- function(df) {
   five_utr_count &lt;- sum(df$`mRNA segment` == &quot;5&#39;UTR&#39;&quot;, na.rm = TRUE)
@@ -518,9 +518,9 @@ nmmtplot</code></pre>
 </div>
 <div id="nanopore-study" class="section level2">
 <h2>Nanopore Study</h2>
-<pre class="r"><code>mlmHELA &lt;- read.table(&quot;./mlm/HeLalocation0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
-mlmHEPG2 &lt;- read.table(&quot;./mlm/HepG2location0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
-mlmHEK &lt;- read.table(&quot;./mlm/HEKlocation0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
+<pre class="r"><code>mlmHELA &lt;- read.table(&quot;HeLalocation0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
+mlmHEPG2 &lt;- read.table(&quot;HepG2location0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
+mlmHEK &lt;- read.table(&quot;HEKlocation0based_filtered.bed&quot;, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
 
 summarize_consequence_counts &lt;- function(df) {
   five_utr_count &lt;- sum(df$consequence == &quot;5UTR&quot;, na.rm = TRUE)
@@ -556,8 +556,8 @@ mlmplot</code></pre>
 </div>
 <div id="nm-seq-study" class="section level2">
 <h2>Nm-seq Study</h2>
-<pre class="r"><code>nmHELA &lt;- read.table(&quot;./nmseq/original_bed/HeLaNm.hg38noLiftover_filtered.bed&quot;, header = FALSE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
-nmHEK &lt;- read.table(&quot;./nmseq/original_bed/HEKNm.hg38noLiftover_filtered.bed&quot;, header = FALSE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
+<pre class="r"><code>nmHELA &lt;- read.table(&quot;HeLaNm.hg38noLiftover_filtered.bed&quot;, header = FALSE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
+nmHEK &lt;- read.table(&quot;HEKNm.hg38noLiftover_filtered.bed&quot;, header = FALSE, sep = &quot;\t&quot;, stringsAsFactors = FALSE)
 
 summarize_consequence_counts &lt;- function(df) {
   five_utr_count &lt;- sum(df[[4]] == &quot;5UTR&quot;, na.rm = TRUE)

@@ -16,6 +16,7 @@ library(ggplot2)
 
 
 ```{r density_line, message=FALSE, warning = FALSE, fig.width=12, fig.height=5, fig.path='densityLineGraph/', dev=c('png', 'pdf')}
+setwd("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/Serio_2O-me_initiation/Fig_5/Fig_5A/")
 # function to process Nm bed files and overlay them with ribo-seq results to get RPKM around Nm position 
 process_position <- function(atg_profile) {
   # Load data
