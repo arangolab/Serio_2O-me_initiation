@@ -1,4 +1,4 @@
-# Fig. 5C, 5D, 5E
+# Extended Data 6A, 6B, 6C
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -187,7 +187,6 @@ BED_FILE="all_m3.bed"
 python ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_posm3.csv"
 
 ```
-
 ## Rstudio analysis and plots
 Run the R code DensityN.Rmd. The markdown is DensityN.html. The data sets needed to reproduce the plots are:
 

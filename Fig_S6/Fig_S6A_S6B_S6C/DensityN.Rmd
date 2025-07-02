@@ -16,8 +16,7 @@ library(scales)
 library(tidyverse)
 ```
 
-```{r codonNplotsAveraged, fig.width=10, fig.height=7, fig.path='Rplots/', dev=c('png', 'pdf')}
-setwd("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/5utrSequence/nmPositionsGenome/riboSeq")
+```{r codonNplots, fig.width=10, fig.height=8, fig.path='density/', dev=c('png', 'pdf')}
 
 merge_and_average_datasets <- function(df_list, filter_zeros = TRUE) {
   # First, remove duplicates from each dataframe in the list
@@ -143,84 +142,90 @@ pos2_avg <- process_merged_data(pos2_merged, "pos2")
 
 # Combine results, handling potential NULL values
 all_results <- list(posm3_avg, posm2_avg, posm1_avg, pos1_avg, pos2_avg)
+valid_results <- all_results[!sapply(all_results, is.null)]
 
-# Flatten the list into a single data frame
-all_results_df <- bind_rows(all_results)
-
-# add sample_with_n column
-all_results_dfn <- all_results_df %>%
-  mutate(sample_with_n = paste0(sample, " (n=", n_entries, ")"))
-
-all_results_grouped <- all_results_dfn %>%
-  mutate(
-    sample_group = case_when(
-      sample %in% c("posm3", "posm2", "posm1", "pos2") ~ "Nm[-3,-2,-1, +2]",
-      sample == "pos1" ~ "Nm[+1]",
-      TRUE ~ NA_character_
-    )
-  ) %>%
-  filter(!is.na(sample_group))
-
-# aggregate data
-grouped_df <- all_results_grouped %>%
-  group_by(codon, sample_group, Pos) %>%
-  summarise(
-    average = mean(average, na.rm = TRUE),
-    n_entries = sum(n_entries),
-    .groups = "drop"
-  ) %>%
-  mutate(sample_with_n = paste0(sample_group, " (n=", n_entries, ")"))
-
-# plot per codon
-unique_codons <- unique(grouped_df$codon)
-
-# Map plot positions 0–29 to -13:+16
-pos_labels <- -13:16
-names(pos_labels) <- 0:29  # names are actual values in the data (x-axis positions)
-
-# Only show labels for -13, 0, +16
-all_ticks <- as.numeric(names(pos_labels))
-desired_labels <- ifelse(pos_labels %in% c(-13, 0, 16), as.character(pos_labels), "")
-
-plots <- list()
-
-for (codon in unique_codons) {
-  subset_data <- grouped_df %>% filter(codon == !!codon)
+if (length(valid_results) > 0) {
+  average_combined <- do.call(rbind, valid_results)
   
-  if (nrow(subset_data) > 0) {
-    p <- ggplot(subset_data, aes(x = Pos, y = average, color = sample_with_n)) +
-      geom_line(size = 1) +
-      labs(
-        title = paste("Codon:", codon), 
-        x = "Position", 
-        y = "Average RPKM",
-        color = "Sample"
-      ) +
-      scale_x_continuous(
-        breaks = all_ticks,
-        labels = desired_labels
-      ) +
-      theme_minimal() +
-      theme(
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(size = 1),
-        axis.ticks = element_line(size = 1),
-        legend.text = element_text(size = 8),
-        legend.title = element_text(size = 10),
-        legend.position = "right"
-      )
+  # Print summary to check if different codons have different values
+  cat("\nSummary of average values by codon:\n")
+  avg_summary <- average_combined %>% 
+    group_by(codon) %>% 
+    summarize(mean_avg = mean(average, na.rm = TRUE),
+              min_avg = min(average, na.rm = TRUE),
+              max_avg = max(average, na.rm = TRUE),
+              n_points = n())
+  print(avg_summary)
+  
+  # Get unique codons
+  unique_codons <- unique(average_combined$codon)
+  
+  # Initialize empty list to store plots
+  plots <- list()
+  
+  # Loop through each codon and create a plot
+  for (codon in unique_codons) {
+    # Subset average_combined for the current codon
+    subset_data <- average_combined %>% filter(codon == !!codon)
     
-    plots[[codon]] <- p
+    # Get n values for this specific codon (using the n_entries we calculated)
+    # Create a lookup table for n values by sample for this codon
+    n_lookup <- subset_data %>%
+      select(sample, n_entries) %>%
+      distinct() %>%
+      deframe()  # Convert to named vector
+    
+    # Add n values to the data for legend labels
+    subset_data <- subset_data %>%
+      mutate(sample_with_n = paste0(sample, " (n=", n_lookup[sample], ")"))
+    
+    # Map plot positions 0–29 to -13:+16
+    pos_labels <- -13:16
+    names(pos_labels) <- 0:29  # names are actual values in the data (x-axis positions)
+    
+    # Only show labels for -13, 0, +16
+    all_ticks <- as.numeric(names(pos_labels))
+    desired_labels <- ifelse(pos_labels %in% c(-13, 0, 16), as.character(pos_labels), "")
+    
+    # Create a plot for the current codon if there are rows
+    if (nrow(subset_data) > 0) {
+      p <- ggplot(subset_data, aes(x = Pos, y = average, color = sample_with_n)) +
+        geom_line(size = 1) +
+        labs(title = paste("Codon:", codon), 
+             x = "Position", 
+             y = "Average RPKM",
+             color = "Sample") +
+        scale_x_continuous(
+          breaks = all_ticks,
+          labels = desired_labels
+          ) +
+        theme_minimal() +
+        theme(
+          axis.text = element_text(size = 10),
+          axis.title = element_text(size = 12),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(size = 1),
+          axis.ticks = element_line(size = 1),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 10),
+          legend.position = "right"
+        )
+      
+      # Add the plot to the list
+      plots[[codon]] <- p
+    }
   }
-}
-
-# Optional: display plots
-#for (codon in names(plots)) print(plots[[codon]])
-
-combined_plot <- ggarrange(
+  
+  # Check how many plots we have
+  cat("\nCreated plots for", length(plots), "codons\n")
+  
+  # Combine all plots into one figure
+  if (length(plots) > 0) {
+    n_cols <- min(5, length(plots))
+    n_rows <- ceiling(length(plots) / n_cols)
+    
+    combined_plot <- ggarrange(
       plotlist = plots, 
       ncol = 2, 
       nrow = 2,
@@ -230,5 +235,10 @@ combined_plot <- ggarrange(
     
     # Print the combined plot
     print(combined_plot)
-
+  } else {
+    cat("No plots to display - check your data\n")
+  }
+} else {
+  cat("No valid results to plot\n")
+}
 ```
