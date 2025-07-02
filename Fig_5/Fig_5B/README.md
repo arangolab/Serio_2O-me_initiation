@@ -75,7 +75,7 @@ python extractATGcoordinates.py
 *fiveUTR_<CODON>positions.bed # genomic coordinates for ATG/CTG/GTG/ATC within the 5UTR for genes without Nm present
 *pos1Nm<CODON>.bed # genomic coordinates for Nm[+1] within the 5UTR
 
-# Extract the ribosome density
+## Extract the ribosome density
 1. Run the following Python script:
 
 ```
@@ -110,7 +110,7 @@ BED_FILE="~/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAM
 BED_FILE="~/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_ATCNm.csv"
 ```
 
-# Rstudio analysis and plots
+## Rstudio analysis and plots
 1. Run the R code DensityBoxplotN.Rmd. The markdown is DensityBoxplotN.html. The data sets needed to reproduce the plots are:
 
 * MH85_ATC.csv
