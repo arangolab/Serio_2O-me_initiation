@@ -15,3 +15,22 @@ Adapters were trimmed using cutadapt/4.2 and the following code:
 cutadapt --match-read-wildcards -e 0.1 -O 1 --quality-cutoff 10 -m 22 -a CTGTAGGCACCATCAAT -o $OUTPUT_R1 $R1 > $METRICS_FILE
 ```
 
+## Alignment
+
+Reads were aligned to Human Genome (hg38) using hisat2/2.1.0 and the following code:
+
+```
+hisat2 -q -x "$reference_genome" -U "$R1" -S "$OUTPUT_DIR/${SAMPLE_NAME}.sam" --summary-file $OUTPUT_DIR/${SAMPLE_NAME}.txt
+```
+
+Sam files were then converted to BAM format, sorted, and indexed using samtools/1.6:
+
+```
+for FILE in "${FILES[@]}"; do
+    # Get the sample name without the extension
+    SAMPLE_NAME=$(basename "$FILE" .sam)
+    # Convert SAM file to BAM file, sort it, and index the sorted BAM file
+    samtools view -bS "$FILE" | samtools sort -o "$OUTPUT_DIR/${SAMPLE_NAME}.bam" -
+    samtools index "$OUTPUT_DIR/${SAMPLE_NAME}.bam"
+done
+```
