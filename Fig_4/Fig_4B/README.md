@@ -1,4 +1,4 @@
-# Figure 4B: Prevalence of Nm[+1] per Codon
+# Fig. 4B
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
@@ -114,4 +114,15 @@ Once the sequence was extracted, another script was used to identify Nm sites ar
 python cognates.py -i "$BED_SEQ" -o "$BED_COGNATES"
 ```
 ## Analyzing Nm [+1] sites across AUG's and near-cognates 
-```2omecognates_study.Rmd``` generates a barplot showing the distribution of Nm[+1] sites per near-cognate codon. 
+```2omecognates_study.Rmd``` generates a barplot showing the distribution of Nm[+1] sites per near-cognate codon. The markdown is 2omecognates_study.html.
+The data sets needed to reproduce the plots are:
+* mlmHEKCognates.bed
+* mlmHeLaCognates.bed
+* mlmHepG2Cognates.bed
+* njuA549Cognates.bed
+* njuHEKCognates.bed
+* njuHeLaCognates.bed
+* nmHEKCognates.bed
+* nmHeLaCognates.bed
+* nmmtHeLaCognates.bed
+* nmmtHepG2Cognates.bed
