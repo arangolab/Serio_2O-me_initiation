@@ -66,37 +66,27 @@ wget -O result.txt 'http://www.ensembl.org/biomart/martservice?query=<?xml versi
 	</Dataset>
 </Query>'
 
-Outputs: results5UTR.fasta
-
 ```
 2. Select the longest transcript per gene
 ```
 python parseFasta.py
 ```
-Inputs: results5UTR.fasta \
-Outputs: filtered5utr.fasta
 
 3. Coordinates for upstream instances of AUG, CUG, GUG, AUC
 ```
 python fastaToBed.py
 ```
-Inputs: filtered5utr.fasta \
-Outputs: 5utrNearCognates.bed
 
 4. Separate entries by codon
 
 ```
 python parseNearCognates.py
 ```
-Inputs: 5utrNearCognates.bed \
-Outputs: 5utrNearCognatesATG.bed 5utrNearCognatesCTG.bed 5utrNearCognatesGTG.bed 
 
 6. Extract the location of the first nucleotide of the canonical AUG start from GTF file 
 ```
 python extractCanonicalCoordinates.py
 ```
-Inputs: Homo_sapiens.GRCh38.113.chr.gtf
-Outputs: canonicalStart.bed (genomic coordinates of the canonical start codon)
 
 # Extract the ribosome density around canonical and upstream codons 
 7. For each codon, canonical AUG, upstream AUG, upstream CUG, upstream GUG, and upstream AUC, run the following Python script:
@@ -117,7 +107,10 @@ python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/
 BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/5utrNearCognatesGTG.bed"
 python /projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/ATGcodon/riboSeq/ribo.density.py "$BIGWIG_FILE" "$BED_FILE" "$OUTPUT_DIR/${SAMPLE_NAME}_GTG.csv"
 ```
-Outputs: 
+
+# Rstudio analysis and plots
+
+Run the R code Density.Rmd. The markdown is Density.html. The data sets needed to reproduce the plots are:
 * MH85_ATC.csv
 * MH85_ATG.csv
 * MH85_canonical.csv
@@ -128,6 +121,3 @@ Outputs:
 * MH87_canonical.csv
 * MH87_CTG.csv
 * MH87_GTG.csv
-
-# Rstudio analysis and plots
-Run the R code Density.Rmd. The markdown is Density.html
