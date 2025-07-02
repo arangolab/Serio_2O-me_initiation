@@ -168,39 +168,9 @@ GTGnm_ratios$dataset <- "GmUG"
 
 ATC_ratios$dataset <- "AUC"
 ATCnm_ratios$dataset <- "AmUC"
-
-standardize_ratios <- function(df) {
-  df %>%
-    mutate(
-      chrom = as.character(chrom),
-      start = as.integer(start),
-      gene = as.character(gene),
-      strand = as.character(strand),
-      ratio = as.numeric(ratio),
-      dataset = as.character(dataset)
-    ) %>%
-    filter(!is.na(ratio)) %>%
-    select(chrom, start, gene, strand, ratio, dataset)
-}
-
-# Apply to all datasets
-all_ratios <- bind_rows(
-  standardize_ratios(ATG_ratios),
-  standardize_ratios(ATGnm_ratios),
-  standardize_ratios(CTG_ratios),
-  standardize_ratios(CTGnm_ratios),
-  standardize_ratios(GTG_ratios),
-  standardize_ratios(GTGnm_ratios),
-  standardize_ratios(ATC_ratios),
-  standardize_ratios(ATCnm_ratios)
-)
-
-# Write to Excel file
-write_xlsx(all_ratios, "RPKMratios.xlsx")
-
 ```
 
-```{r density_boxplot, message=FALSE, warning = FALSE, fig.width=9, fig.height=8, fig.path='density/', dev=c('png', 'pdf')}
+```{r density_boxplot, message=FALSE, warning = FALSE, fig.width=9, fig.height=8, fig.path='PLOTboxplot/', dev=c('png', 'pdf')}
 
 # Combine the data frames
 all_ratios <- rbind(ATG_ratios, ATGnm_ratios, CTG_ratios, CTGnm_ratios, GTG_ratios, GTGnm_ratios, ATC_ratios, ATCnm_ratios)

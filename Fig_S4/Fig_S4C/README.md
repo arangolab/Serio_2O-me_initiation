@@ -1,4 +1,4 @@
-# Extended Data 4B
+# Extended Data 4C
 
 ## File preparation per study
 Since we are using 2'O-methylation maps from different publications, file preparation differs slightly based on the original data provided.
