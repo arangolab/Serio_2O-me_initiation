@@ -99,7 +99,7 @@ Inputs: Homo_sapiens.GRCh38.113.chr.gtf
 Outputs: canonicalStart.bed (genomic coordinates of the canonical start codon)
 
 # Extract the ribosome density around canonical and upstream codons 
-For each codon, Canonical AUG, Upstream AUG, Upstream CUG, Upstream GUG, and Upstream AUC, run the following pythos script:
+7. For each codon, canonical AUG, upstream AUG, upstream CUG, upstream GUG, and upstream AUC, run the following Python script:
 
 ```
 BED_FILE="/projects/b1042/Arangolab/2ometh/5utrSequence/nmPositionsGenome/nearCognateBoxplot/canonicalStart.bed"
@@ -128,3 +128,6 @@ Outputs:
 * MH87_canonical.csv
 * MH87_CTG.csv
 * MH87_GTG.csv
+
+# Rstudio analysis and plots
+Run the R code Density.Rmd. The markdown is Density.html
