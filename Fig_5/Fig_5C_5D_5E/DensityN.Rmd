@@ -1,0 +1,246 @@
+---
+title: "Density"
+author: "Hannah Serio"
+date: "5/13/2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(ggpubr)
+library(tibble)
+library(ggplot2)
+library(scales)
+library(tidyverse)
+```
+
+```{r codonNplotsAveraged, fig.width=10, fig.height=7, fig.path='Rplots/', dev=c('png', 'pdf')}
+setwd("/Volumes/fsmresfiles/Basic_Sciences/Pharm/Arango_Lab/Quest/2ometh/5utrSequence/nmPositionsGenome/riboSeq")
+
+merge_and_average_datasets <- function(df_list, filter_zeros = TRUE) {
+  # First, remove duplicates from each dataframe in the list
+  df_list_deduped <- lapply(df_list, function(df) {
+    # Remove duplicates based on key columns
+    unique_df <- df[!duplicated(df[, c("chrom", "start", "end", "codon", "strand")]), ]
+    cat("  Deduplicated data:", nrow(unique_df), "rows\n")
+    return(unique_df)
+  })
+  
+  # Merge on shared keys
+  merged_df <- Reduce(function(x, y) {
+    merge(x, y, by = c("chrom", "start", "end", "codon", "strand"), all = FALSE)
+  }, df_list)
+  
+  # Get the original column names from the first dataframe (excluding key columns)
+  key_cols <- c("chrom", "start", "end", "codon", "strand")
+  first_df_value_cols <- setdiff(names(df_list[[1]]), key_cols)
+  
+  # Process each value column
+  for (col in first_df_value_cols) {
+    x_col <- paste0(col, ".x")
+    y_col <- paste0(col, ".y")
+    
+    # Check if both columns exist in the merged dataframe
+    if (all(c(x_col, y_col) %in% names(merged_df))) {
+      # Calculate the mean and remove the .x and .y columns
+      merged_df[[col]] <- rowMeans(merged_df[, c(x_col, y_col)], na.rm = TRUE)
+      merged_df <- merged_df[, !names(merged_df) %in% c(x_col, y_col)]
+    }
+  }
+  cat("  Raw merged data:", nrow(merged_df), "rows\n")
+  # Optional: Filter out rows where any value column has zeros
+  if (filter_zeros) {
+    value_cols <- setdiff(names(merged_df), key_cols)
+    if (length(value_cols) > 0) {
+      merged_df <- merged_df[!apply(merged_df[, value_cols] == 0, 1, any), ]
+    }
+  }
+  cat("  Retained data:", nrow(merged_df), "rows\n")
+  
+  return(merged_df)
+}
+
+## Read in Ribo-seq data and merge replicates, remove any rows with 0 present
+
+MH85_posm3 <- read_csv("MH85_posm3.csv")
+MH87_posm3 <- read_csv("MH87_posm3.csv")
+posm3_merged <- merge_and_average_datasets(list(MH85_posm3, MH87_posm3))
+posm3_merged <- unique(posm3_merged)
+
+MH85_posm2 <- read_csv("MH85_posm2.csv")
+MH87_posm2 <- read_csv("MH87_posm2.csv")
+posm2_merged <- merge_and_average_datasets(list(MH85_posm2, MH87_posm2))
+posm2_merged <- unique(posm2_merged)
+
+MH85_posm1 <- read_csv("MH85_posm1.csv")
+MH87_posm1 <- read_csv("MH87_posm1.csv")
+posm1_merged <- merge_and_average_datasets(list(MH85_posm1, MH87_posm1))
+posm1_merged <- unique(posm1_merged)
+
+MH85_pos1 <- read_csv("MH85_pos1.csv")
+MH87_pos1 <- read_csv("MH87_pos1.csv")
+pos1_merged <- merge_and_average_datasets(list(MH85_pos1, MH87_pos1))
+pos1_merged <- unique(pos1_merged)
+
+MH85_pos2 <- read_csv("MH85_pos2.csv")
+MH87_pos2 <- read_csv("MH87_pos2.csv")
+pos2_merged <- merge_and_average_datasets(list(MH85_pos2, MH87_pos2))
+pos2_merged <- unique(pos2_merged)
+
+MH85_pos3 <- read_csv("MH85_pos3.csv")
+MH87_pos3 <- read_csv("MH87_pos3.csv")
+pos3_merged <- merge_and_average_datasets(list(MH85_pos3, MH87_pos3))
+pos3_merged <- unique(pos3_merged)
+
+MH85_pos4 <- read_csv("MH85_pos4.csv")
+MH87_pos4 <- read_csv("MH87_pos4.csv")
+pos4_merged <- merge_and_average_datasets(list(MH85_pos4, MH87_pos4))
+pos4_merged <- unique(pos4_merged)
+
+# Function to process merged data and create position averages
+process_merged_data <- function(merged_df, position_label) {
+  cat("Processing", position_label, "with", nrow(merged_df), "rows\n")
+  
+  # Get column names that represent positions (exclude metadata columns)
+  non_pos_cols <- c("chrom", "start", "end", "codon", "strand")
+  pos_cols <- setdiff(colnames(merged_df), non_pos_cols)
+  
+  # Process by codon
+  codons <- c("ATG", "CTG", "GTG")
+  avg_list <- list()
+  
+  for (codon in codons) {
+    # Filter for this specific codon 
+    codon_df <- merged_df %>% filter(codon == !!codon)
+    
+    cat("  Codon", codon, "has", nrow(codon_df), "rows\n")
+    
+    if (nrow(codon_df) > 0) {
+      # Get only the position columns for averaging
+      selected <- codon_df[, pos_cols]
+      # Calculate averages across all rows for this codon
+      averages <- colMeans(selected, na.rm = TRUE)
+      
+      # Create result dataframe
+      result_df <- data.frame(
+        Pos = 1:length(averages),
+        average = averages,
+        sample = position_label,
+        codon = codon,
+        n_entries = nrow(codon_df)  # Add the count of entries for this codon
+      )
+      
+      avg_list[[codon]] <- result_df
+    }
+  }
+  
+  # Combine all codon results
+  if (length(avg_list) > 0) {
+    return(do.call(rbind, avg_list))
+  } else {
+    return(NULL)
+  }
+}
+
+# Process each merged dataset
+posm3_avg <- process_merged_data(posm3_merged, "posm3")
+posm2_avg <- process_merged_data(posm2_merged, "posm2")
+posm1_avg <- process_merged_data(posm1_merged, "posm1")
+pos1_avg <- process_merged_data(pos1_merged, "pos1")
+pos2_avg <- process_merged_data(pos2_merged, "pos2")
+pos3_avg <- process_merged_data(pos3_merged, "pos3")
+pos4_avg <- process_merged_data(pos4_merged, "pos4")
+
+# Combine results, handling potential NULL values
+all_results <- list(posm3_avg, posm2_avg, posm1_avg, pos1_avg, pos2_avg, pos3_avg, pos4_avg)
+
+# Flatten the list into a single data frame
+all_results_df <- bind_rows(all_results)
+
+# add sample_with_n column
+all_results_dfn <- all_results_df %>%
+  mutate(sample_with_n = paste0(sample, " (n=", n_entries, ")"))
+
+all_results_grouped <- all_results_dfn %>%
+  mutate(
+    sample_group = case_when(
+      sample %in% c("posm3", "posm2", "posm1", "pos2") ~ "Nm[-3,-2,-1, +2]",
+      sample == "pos1" ~ "Nm[+1]",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(sample_group))
+
+# aggregate data
+grouped_df <- all_results_grouped %>%
+  group_by(codon, sample_group, Pos) %>%
+  summarise(
+    average = mean(average, na.rm = TRUE),
+    n_entries = sum(n_entries),
+    .groups = "drop"
+  ) %>%
+  mutate(sample_with_n = paste0(sample_group, " (n=", n_entries, ")"))
+
+# plot per codon
+unique_codons <- unique(grouped_df$codon)
+
+# Map plot positions 0–29 to -13:+16
+pos_labels <- -13:16
+names(pos_labels) <- 0:29  # names are actual values in the data (x-axis positions)
+
+# Only show labels for -13, 0, +16
+all_ticks <- as.numeric(names(pos_labels))
+desired_labels <- ifelse(pos_labels %in% c(-13, 0, 16), as.character(pos_labels), "")
+
+plots <- list()
+
+for (codon in unique_codons) {
+  subset_data <- grouped_df %>% filter(codon == !!codon)
+  
+  if (nrow(subset_data) > 0) {
+    p <- ggplot(subset_data, aes(x = Pos, y = average, color = sample_with_n)) +
+      geom_line(size = 1) +
+      labs(
+        title = paste("Codon:", codon), 
+        x = "Position", 
+        y = "Average RPKM",
+        color = "Sample"
+      ) +
+      scale_x_continuous(
+        breaks = all_ticks,
+        labels = desired_labels
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(size = 1),
+        axis.ticks = element_line(size = 1),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10),
+        legend.position = "right"
+      )
+    
+    plots[[codon]] <- p
+  }
+}
+
+# Optional: display plots
+#for (codon in names(plots)) print(plots[[codon]])
+
+combined_plot <- ggarrange(
+      plotlist = plots, 
+      ncol = 2, 
+      nrow = 2,
+      common.legend = FALSE,
+      legend = "right"
+    )
+    
+    # Print the combined plot
+    print(combined_plot)
+
+```
